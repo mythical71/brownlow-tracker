@@ -2,12 +2,11 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-import json
 
 URL = "https://afltables.com/afl/stats/2026.html"
 
-def fetch_latest_stats():
-    print(f"[{datetime.now()}] Downloading page...")
+def main():
+    print(f"[{datetime.now()}] Downloading 2026 stats...")
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     response = requests.get(URL, headers=headers, timeout=30)
     response.raise_for_status()
@@ -15,34 +14,21 @@ def fetch_latest_stats():
 
     soup = BeautifulSoup(response.text, 'html.parser')
     tables = soup.find_all('table')
-    print(f"Found {len(tables)} tables on the page")
+    print(f"Found {len(tables)} tables on the page\n")
 
-    all_dfs = []
     for i, table in enumerate(tables):
         try:
             df = pd.read_html(str(table))[0]
-            print(f"Table {i}: {len(df)} rows, columns = {list(df.columns)}")
+            print(f"Table {i}: {len(df)} rows | Columns: {list(df.columns)}")
             
-            if len(df) > 5 and 'Player' in str(df.columns):
-                df.columns = [str(col).strip() for col in df.columns]
-                all_dfs.append(df)
-        except:
-            pass
-
-    if all_dfs:
-        full_df = pd.concat(all_dfs, ignore_index=True)
-        print(f"\n✅ Successfully combined {len(full_df)} player rows")
-        print("First few columns:", list(full_df.columns)[:15])
-        return full_df
-    else:
-        raise ValueError("No valid player tables found")
-
-def main():
-    try:
-        stats = fetch_latest_stats()
-        print("\n=== DEBUG COMPLETE - Script is working but needs final column mapping ===")
-    except Exception as e:
-        print(f"❌ Error: {e}")
+            # Print first row to help debugging
+            if len(df) > 0:
+                print("   First row example:", df.iloc[0].to_dict())
+                print("-" * 60)
+        except Exception as e:
+            print(f"Table {i} failed to parse: {e}")
+    
+    print("\nDebug complete. Copy the output above and send it to me.")
 
 if __name__ == "__main__":
     main()
