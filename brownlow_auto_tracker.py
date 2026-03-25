@@ -12,7 +12,7 @@ WEIGHTS = {
     'goals': 0.08,
     'marks': 0.05,
     'contested_marks': 0.05,
-    'rebound_50s': 0.04,      # strong proxy for intercept work
+    'rebound_50s': 0.04,
     'goal_assists': 0.02,
     'hitouts': 0.02,
     'kicks': 0.01,
@@ -38,7 +38,7 @@ def fetch_latest_stats():
             if len(df) > 5 and 'Player' in str(df.columns):
                 df.columns = [str(col).strip() for col in df.columns]
                 
-                # Actual 2026 column mapping
+                # Correct 2026 column mapping
                 rename_map = {
                     'K': 'kicks',
                     'H': 'handballs',
@@ -59,7 +59,6 @@ def fetch_latest_stats():
                 if 'Player' in df.columns:
                     df = df.rename(columns={'Player': 'player_name'})
                 
-                # Calculate disposals if missing
                 if 'disposals' not in df.columns and 'kicks' in df.columns and 'handballs' in df.columns:
                     df['disposals'] = df['kicks'].fillna(0) + df['handballs'].fillna(0)
                 
