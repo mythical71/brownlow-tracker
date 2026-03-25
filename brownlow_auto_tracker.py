@@ -12,7 +12,7 @@ WEIGHTS = {
     'goals': 0.08,
     'marks': 0.05,
     'contested_marks': 0.05,
-    'rebound_50s': 0.04,          # proxy for intercept possessions
+    'rebound_50s': 0.04,      # strong proxy for intercept work
     'goal_assists': 0.02,
     'hitouts': 0.02,
     'kicks': 0.01,
@@ -23,7 +23,7 @@ WEIGHTS = {
 URL = "https://afltables.com/afl/stats/2026.html"
 
 def fetch_latest_stats():
-    print(f"[{datetime.now()}] Downloading 2026 stats...")
+    print(f"[{datetime.now()}] Downloading 2026 stats from AFL Tables...")
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     response = requests.get(URL, headers=headers, timeout=30)
     response.raise_for_status()
@@ -38,18 +38,28 @@ def fetch_latest_stats():
             if len(df) > 5 and 'Player' in str(df.columns):
                 df.columns = [str(col).strip() for col in df.columns]
                 
+                # Actual 2026 column mapping
                 rename_map = {
-                    'KI': 'kicks', 'HB': 'handballs', 'DI': 'disposals',
-                    'MK': 'marks', 'CM': 'contested_marks', 'TK': 'tackles',
-                    'GL': 'goals', 'BH': 'behinds', 'HO': 'hitouts',
-                    'CL': 'clearances', 'CP': 'contested_possessions',
-                    'GA': 'goal_assists', 'RB': 'rebound_50s'
+                    'K': 'kicks',
+                    'H': 'handballs',
+                    'D': 'disposals',
+                    'M': 'marks',
+                    'CM': 'contested_marks',
+                    'T': 'tackles',
+                    'G': 'goals',
+                    'B': 'behinds',
+                    'HO': 'hitouts',
+                    'C': 'clearances',
+                    'CP': 'contested_possessions',
+                    'GA': 'goal_assists',
+                    'R': 'rebound_50s'
                 }
                 df = df.rename(columns=rename_map)
                 
                 if 'Player' in df.columns:
                     df = df.rename(columns={'Player': 'player_name'})
                 
+                # Calculate disposals if missing
                 if 'disposals' not in df.columns and 'kicks' in df.columns and 'handballs' in df.columns:
                     df['disposals'] = df['kicks'].fillna(0) + df['handballs'].fillna(0)
                 
@@ -65,9 +75,10 @@ def fetch_latest_stats():
         full_df = pd.concat(all_dfs, ignore_index=True)
         full_df = full_df.dropna(subset=['player_name'])
         full_df['player_name'] = full_df['player_name'].astype(str).str.replace(r'\[.*?\]', '', regex=True).str.strip()
-        print(f"Loaded {len(full_df)} player records.")
+        print(f"✅ Loaded {len(full_df)} player records.")
         return full_df
-    raise ValueError("No stats tables found.")
+    else:
+        raise ValueError("No stats tables found.")
 
 def main():
     stats = fetch_latest_stats()
@@ -89,9 +100,9 @@ def main():
     with open('brownlow_leaderboard.json', 'w') as f:
         json.dump(json_data, f, indent=2)
     
-    print("\n=== TOP 15 PREDICTED BROWNLOW ===\n")
+    print("\n=== TOP 15 PREDICTED BROWNLOW LEADERBOARD ===\n")
     print(df[['player_name', 'predicted_points']].head(15).to_string(index=False))
-    print("\n✅ brownlow_leaderboard.json updated.")
+    print("\n✅ brownlow_leaderboard.json updated successfully.")
 
 if __name__ == "__main__":
     main()
